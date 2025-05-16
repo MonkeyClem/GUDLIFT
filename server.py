@@ -2,6 +2,11 @@ import json
 from flask import Flask,render_template,request,redirect,flash,url_for
 
 
+# On commence par importer les éléments nécessaire depuis flask (Flask, la méthode servent au rendu du template, la méthode request, la méthode redirect pour les redirections, etc.)
+# On définit ensuite loadClubs et loadCompetitions, qui nous serviront à charger les competitions et les clubs dans les constantes du même noms
+# On a ensuite toute les routes de l'app. Je n'ai jamais utilisé Flask, mais j'ai l'impression que c'est un petit peu similaire à Django dans la méthode de rendu.
+# On indique un endpoint et une méthode HTTP, et dans la fonction render_template, on indique le nom du fichier html, ainsi que les éléments dynamique qui serviront à être display dynamiquement dans le HTML avec une syntaxe Jinja 2
+
 def loadClubs():
     with open('clubs.json') as c:
          listOfClubs = json.load(c)['clubs']
@@ -12,7 +17,6 @@ def loadCompetitions():
     with open('competitions.json') as comps:
          listOfCompetitions = json.load(comps)['competitions']
          return listOfCompetitions
-
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
