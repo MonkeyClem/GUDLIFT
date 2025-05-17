@@ -38,7 +38,6 @@ def showSummary():
     if matched_club is None: 
         flash("ERROR : Unknown e-mail")
         return redirect(url_for('index'))
-    print("matched_club : ", matched_club)
     return render_template('welcome.html', club=matched_club ,competitions=competitions)
 
 
