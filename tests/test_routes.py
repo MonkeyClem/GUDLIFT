@@ -1,5 +1,5 @@
 from server import app
-
+from datetime import datetime
 def test_valid_email():
     with app.test_client() as client:
         response = client.post('/showSummary', data={'email': 'john@simplylift.co'})

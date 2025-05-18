@@ -1,21 +1,21 @@
 import json
 import sys
 import os
-
+from datetime import datetime
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask,render_template,request,redirect,flash,url_for
+from utils.utils import (
+    find_club_by_name,
+    find_club_by_email,
+    find_competition_by_name,
+    is_valid_places_input,
+    exceed_club_points,
+    exceed_available_places,
+    is_competition_in_past,
+    loadClubs,
+    loadCompetitions
+)
 
-
-def loadClubs():
-    with open('clubs.json') as c:
-         listOfClubs = json.load(c)['clubs']
-         return listOfClubs
-
-
-def loadCompetitions():
-    with open('competitions.json') as comps:
-         listOfCompetitions = json.load(comps)['competitions']
-         return listOfCompetitions
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
@@ -28,11 +28,8 @@ def index():
     return render_template('index.html')
 
 
-
-
 @app.route('/showSummary',methods=['POST'])
 def showSummary():
-    print("\n \n On est dans le showSummary : \n")
     email = request.form["email"]
     matched_club = find_club_by_email(email= email, clubs=clubs)
     if matched_club is None: 
@@ -54,24 +51,40 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
-    competition = [c for c in competitions if c['name'] == request.form['competition']][0]
-    club = [c for c in clubs if c['name'] == request.form['club']][0]
-    placesRequired = int(request.form['places'])
-    competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
+    competition_name = request.form['competition']
+    competition = find_competition_by_name(name = competition_name)
+    club_name = request.form["club"]
+    club = find_club_by_name(club_name=club_name)
+    competition_date= datetime.strptime(competition["date"], "%Y-%m-%d %H:%M:%S")
+    places_str = request.form['places']
+    placesRequired = int(places_str)
+    club_available_points = int(club['points'])
+    competition_available_places = int(competition['numberOfPlaces'])
+    if not is_valid_places_input(places_input=places_str): 
+        flash('Please enter a valid number of places.')
+        return redirect(url_for('book', club=club_name, competition=competition_name))
+    if exceed_available_places(required_places=placesRequired, available_places=competition_available_places): 
+            flash("ERROR: You can not book more places than available")
+            return redirect(url_for('book', club=club_name, competition=competition_name))
+    if exceed_club_points(required_places=placesRequired, club_available_points=club_available_points): 
+            flash("ERROR: You do not have enough points to book these places.")
+            return redirect(url_for('book', club=club_name, competition=competition_name))
+    if placesRequired > 12: 
+        flash("ERROR: You can not book more than 12 places")
+        return redirect(url_for('book', club=club_name, competition=competition_name))
+    if is_competition_in_past(competition_date=competition_date): 
+        flash("ERROR: This competition is not available anymore... Sorry")
+        return redirect(url_for('book', club=club_name, competition=competition_name))
+    competition['numberOfPlaces'] = competition_available_places-placesRequired
     flash('Great-booking complete!')
     return render_template('welcome.html', club=club, competitions=competitions)
 
 
 # TODO: Add route for points display
-
+@app.route('/clubs/points', methods=['GET'])
+def displayPoints():
+    pass
 
 @app.route('/logout')
 def logout():
     return redirect(url_for('index'))
-
-
-
-def find_club_by_email(email, clubs):
-    return next((club for club in clubs if club["email"] == email), None)
-    # return matched_club
-
