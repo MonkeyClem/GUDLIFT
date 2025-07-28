@@ -59,6 +59,7 @@ def purchasePlaces():
     places_str = request.form['places']
     placesRequired = int(places_str)
     club_available_points = int(club['points'])
+    print("club_available_points :::>" , club_available_points)
     competition_available_places = int(competition['numberOfPlaces'])
     if not is_valid_places_input(places_input=places_str): 
         flash('Please enter a valid number of places.')
@@ -75,16 +76,29 @@ def purchasePlaces():
     if is_competition_in_past(competition_date=competition_date): 
         flash("ERROR: This competition is not available anymore... Sorry")
         return redirect(url_for('book', club=club_name, competition=competition_name))
+    competition['numberOfPlaces'] = competition_available_places - placesRequired
+    print("Updated numberOfPlaces:", competition['numberOfPlaces'])
     competition['numberOfPlaces'] = competition_available_places-placesRequired
+    club["points"] = club_available_points - placesRequired
     flash('Great-booking complete!')
+    # Mettre à jour la compétition dans la liste globale
+    for i, c in enumerate(competitions):
+        if c['name'] == competition['name']:
+            competitions[i] = competition
+            break
     return render_template('welcome.html', club=club, competitions=competitions)
+
 
 
 # TODO: Add route for points display
 @app.route('/clubs/points', methods=['GET'])
 def displayPoints():
+    return render_template('points.html', clubs = clubs)
     pass
 
 @app.route('/logout')
 def logout():
     return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)

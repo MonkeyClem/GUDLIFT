@@ -22,8 +22,14 @@ def find_club_by_name(club_name : str):
 def find_club_by_email(email, clubs):
     return next((club for club in clubs if club["email"] == email), None)
 
-def find_competition_by_name(name) : 
-    return next((competition for competition in competitions if competition["name"] == name), None)
+def find_competition_by_name(name):
+    for c in competitions:
+        if c["name"] == name:
+            return c
+    return None
+
+# def find_competition_by_name(name) : 
+#     return next((competition for competition in competitions if competition["name"] == name), None)
 
 def is_valid_places_input(places_input):
     try :
